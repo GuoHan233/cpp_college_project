@@ -3,20 +3,35 @@
     easier to use test functions
 */
 
-struct player {
-// TODO: (remove this when done)
+#pragma once
 
+#include <string>
+
+using namespace std;
+
+struct player {
+  string real_name;
+  string gamer_tag;
+  string current_role;
+  int rating;
+  float winRate;
+  float kdRatio;
+  string scout_status;
 };
 
 struct game {
-// TODO: (remove this when done)
-// should point to player
-
+  int gameid;
+  string game;
+  player *topPlayer;
+  int kills;
+  int deaths;
 };
 
 struct fixture {
-// TODO: (remove this when done)
-
+  int fixture_id;
+  string opponent;
+  string matchdate;
+  game match_stats;
 };
 
 void example(fixture fixtures[], float example1);
