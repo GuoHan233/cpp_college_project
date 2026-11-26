@@ -1,8 +1,3 @@
-/*
-    Header file for all structures and function prototypes
-    easier to use test functions
-*/
-
 #pragma once
 
 #include <string>
@@ -34,4 +29,20 @@ struct fixture {
   game match_stats;
 };
 
-void example(fixture fixtures[], float example1);
+void passByValue(int rating);
+void passArrayOfPlayers(player team[], int size);
+void updateRatingByPointer(player* p, int newRating);
+void updateRatingByRefVar(player& p, int newRating);
+void resetTopPlayerPtr(player*& topPtr);
+
+int sumTeamRatings(player team[], int n);
+int findBestPlayerIndex(player team[], int n);
+long factorialRecursive(int n);
+
+void showMenu();
+void addPlayer(player team[], int& size, int capacity);
+void deletePlayer(player team[], int& size, int index);
+void editPlayerRating(player& p);
+void editPlayerRatingByPointer(player* p);
+void viewRoster(player team[], int size);
+void runApp();

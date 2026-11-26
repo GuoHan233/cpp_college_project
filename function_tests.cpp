@@ -11,8 +11,7 @@
       3. Assert  : verify the outcome matches the expectation
 */
 
-#include "guo_functions.h"   // Guo's new functions (menu / parameter
-                             // passing / recursion)
+#include "main_functions.h"
 
 #include <gtest/gtest.h>
 
@@ -60,14 +59,14 @@ TEST(ParameterPassing, ResetTopPlayerPtr) {
 // Recursion tests (Task 9)
 // -------------------------------------------------------------------------
 
-TEST(Recursion, SumTeamWins) {
+TEST(Recursion, SumTeamRatings) {
   player team[3] = {
       {"A", "a", "DPS", 100, 50.0f, 1.0f, "Scouted"},
       {"B", "b", "DPS", 200, 50.0f, 1.0f, "Scouted"},
       {"C", "c", "DPS", 300, 50.0f, 1.0f, "Scouted"}
-  };                                  // Arrange
-  EXPECT_EQ(sumTeamWins(team, 3), 600); // Act + Assert
-  EXPECT_EQ(sumTeamWins(team, 0), 0);   // base case
+  };                                      // Arrange
+  EXPECT_EQ(sumTeamRatings(team, 3), 600); // Act + Assert
+  EXPECT_EQ(sumTeamRatings(team, 0), 0);   // base case
 }
 
 TEST(Recursion, FindBestPlayerIndex) {
