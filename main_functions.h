@@ -1,10 +1,20 @@
+/*
+    Header file for all structures and function prototypes
+    easier to use test functions
+*/
+
 #pragma once
 
 #include <string>
 
 using namespace std;
 
-struct player {
+const int MAX_PLAYERS = 10;
+const int MAX_FIXTURES = 10;
+
+struct player
+{
+  int playerid;
   string real_name;
   string gamer_tag;
   string current_role;
@@ -14,35 +24,41 @@ struct player {
   string scout_status;
 };
 
-struct game {
+struct game
+{
   int gameid;
-  string game;
-  player *topPlayer;
-  int kills;
-  int deaths;
+  string game_name;
 };
 
-struct fixture {
+struct fixture
+{
   int fixture_id;
   string opponent;
   string matchdate;
   game match_stats;
 };
 
-void passByValue(int rating);
-void passArrayOfPlayers(player team[], int size);
-void updateRatingByPointer(player* p, int newRating);
-void updateRatingByRefVar(player& p, int newRating);
-void resetTopPlayerPtr(player*& topPtr);
-
-int sumTeamRatings(player team[], int n);
+// recursive
 int findBestPlayerIndex(player team[], int n);
-long factorialRecursive(int n);
 
+// sorting and overloads
+void sortById(fixture fixtures[], int count);
+void sortById(game games[], int count);
+
+// Function Prototypes: FileI/O and Linear Search
+void readingInputfiles(string filename, player Players[], int *p_numPlayers);
+void writeToOutputFile(string filename, const player Players[], int numPlayers);
+
+void writingToFixturesOutputFile(string filename, const fixture Fixtures[],
+                                 int numFixtures);
+void readingFixturesInputFiles(string filename, fixture Fixtures[],
+                               int *p_numFixtures);
+
+int searchForPlayerID(const player Players[], int size, int playerID);
+
+// Menu / user interface
 void showMenu();
-void addPlayer(player team[], int& size, int capacity);
-void deletePlayer(player team[], int& size, int index);
-void editPlayerRating(player& p);
-void editPlayerRatingByPointer(player* p);
-void viewRoster(player team[], int size);
-void runApp();
+void listPlayers(const player Players[], int numPlayers);
+void listFixtures(const fixture Fixtures[], int numFixtures);
+void runMenu(player Players[], int numPlayers, fixture Fixtures[],
+             int numFixtures, game games[], int numGames);

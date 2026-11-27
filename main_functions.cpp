@@ -1,192 +1,380 @@
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include "main_functions.h"
 
-#include <iostream>
+using namespace std;
 
-// Demonstrates pass-by-value; modifies a local copy without affecting the caller's variable.
-void passByValue(int rating) {
-  std::cout << "passByValue received rating = " << rating << std::endl;
-  rating = rating + 100;
-  std::cout << "passByValue local rating = " << rating << std::endl;
-}
-
-// Prints all players in the team array (demonstrates passing an array and its size).
-void passArrayOfPlayers(player team[], int size) {
-  for (int i = 0; i < size; i++) {
-    std::cout << team[i].gamer_tag << " (" << team[i].real_name << ") - "
-              << team[i].current_role << " - rating " << team[i].rating
-              << std::endl;
-  }
-}
-
-// Updates a player's rating via pointer, safely ignoring null pointers.
-void updateRatingByPointer(player* p, int newRating) {
-  if (p != nullptr) {
-    p->rating = newRating;
-  }
-}
-
-// Updates a player's rating directly using a reference parameter.
-void updateRatingByRefVar(player& p, int newRating) {
-  p.rating = newRating;
-}
-
-// Reassigns the caller's player pointer by reference to point to a default rookie.
-void resetTopPlayerPtr(player*& topPtr) {
-  static player newcomer = {"New Recruit", "Rookie", "DPS",
-                            2000, 50.0f, 1.0f, "Scouted"};
-  topPtr = &newcomer;
-}
-
-// Recursively calculates the total rating of the first n players in the team.
-int sumTeamRatings(player team[], int n) {
-  if (n <= 0) {
+//  Searches the team array recursively to find the index of the
+// player with the highest rating
+int findBestPlayerIndex(player team[], int n)
+{
+  if (n == 1)
+  {
     return 0;
   }
-  return team[n - 1].rating + sumTeamRatings(team, n - 1);
-}
 
-// Recursively finds and returns the index of the player with the highest rating.
-int findBestPlayerIndex(player team[], int n) {
-  if (n == 1) {
-    return 0;
-  }
+  // Recursive find the best player index among the first n - 1 players
   int bestIdx = findBestPlayerIndex(team, n - 1);
-  if (team[n - 1].rating > team[bestIdx].rating) {
-    return n - 1;
+
+  if (team[n - 1].rating > team[bestIdx].rating)
+  {
+    return n - 1; 
   }
   return bestIdx;
 }
 
-// Recursively computes the factorial of n (n!).
-long factorialRecursive(int n) {
-  if (n <= 1) {
-    return 1;
+void sortById(fixture fixtures[], int count)
+{
+  // bubble sort
+  bool swapped;
+
+  for (int i = 0; i < count - 1; i++)
+  {
+    swapped = false;
+    for (int j = 0; j < count - i - 1; j++)
+    {
+      // move the fixture id to the next index (swap)
+      if (fixtures[j].fixture_id > fixtures[j + 1].fixture_id)
+      {
+        fixture tmp = fixtures[j];
+        fixtures[j] = fixtures[j + 1];
+        fixtures[j + 1] = tmp;
+        swapped = true;
+      }
+    }
+
+    if (!swapped) // already sorted
+      break;
   }
-  return n * factorialRecursive(n - 1);
 }
 
-// Displays the main scouting system menu options and prompts for user input.
-void showMenu() {
-  std::cout << "\n===== E-SPORTS SCOUTING SYSTEM =====\n";
-  std::cout << "1. Add player\n";
-  std::cout << "2. Delete player\n";
-  std::cout << "3. Edit player rating\n";
-  std::cout << "4. View roster\n";
-  std::cout << "5. View best player\n";
-  std::cout << "6. Exit\n";
-  std::cout << "Enter your choice: ";
+void sortById(game games[], int count)
+{
+  // selection sort
+  for (int i = 0; i < count - 1; i++)
+  {
+    int min_index = i;
+
+    // Iterate through the unsorted portion
+    // to find the actual minimum
+    for (int j = i + 1; j < count; j++)
+    {
+      if (games[j].gameid < games[min_index].gameid)
+      {
+        min_index = j;
+      }
+    }
+
+    // Move minimum element to its
+    // correct position
+    if (min_index != i)
+    {
+      game tmp = games[i];
+      games[i] = games[min_index];
+      games[min_index] = tmp;
+    }
+  }
 }
 
-// Prompts for details and adds a new player to the roster if space is available.
-void addPlayer(player team[], int& size, int capacity) {
-  if (size >= capacity) {
-    std::cout << "Roster is full.\n";
+void readingInputfiles(string filename, player Players[], int *p_numPlayers)
+{
+  ifstream inFile(filename); // Reads the file
+
+  if (!inFile)
+  {
+    // Checks for errors incase the file won't open
+    cerr << "Error opening file: " << filename << endl;
     return;
   }
-  std::cout << "Enter real name: ";
-  std::cin >> team[size].real_name;
-  std::cout << "Enter gamer tag: ";
-  std::cin >> team[size].gamer_tag;
-  std::cout << "Enter role: ";
-  std::cin >> team[size].current_role;
-  std::cout << "Enter rating: ";
-  std::cin >> team[size].rating;
-  std::cout << "Enter win rate: ";
-  std::cin >> team[size].winRate;
-  std::cout << "Enter KD ratio: ";
-  std::cin >> team[size].kdRatio;
-  team[size].scout_status = "Scouted";
-  size++;
+  else
+  {
+    string line;
+    getline(inFile, line); // Skips the hearder line texts
+    *p_numPlayers = 0;
+
+    // Reads the lines until the file ends or whent the array  is full
+    while (getline(inFile, line) && *p_numPlayers < MAX_PLAYERS)
+    {
+      stringstream ss(line); // turns the rows into a stream so the getline
+                             // function can start reading the file
+      string hold;           // holds any number as text until it gets converted (int, floats)
+      player list;           // creates a new list which is empty to fill in the different
+                             // structs
+
+      // The player's ID is delcared as a int so it reads it as text then
+      // converts it
+      getline(ss, hold, ',');
+      list.playerid = stoi(hold); // the stoi function is what converts it into
+                                  // a int from a string
+
+      // These structs are just strings so it reads the text fields and stores
+      // it straight into
+      //  the struct which is indicated by each ','
+      getline(ss, list.real_name, ',');
+      getline(ss, list.gamer_tag, ',');
+      getline(ss, list.current_role, ',');
+
+      getline(ss, hold, ',');
+      list.rating = stoi(hold);
+
+      // The winrate element is an float because of the decimal point
+      getline(ss, hold, ',');    // Reads it as a string
+      list.winRate = stof(hold); // Then the 'stof' function converts it into a
+                                 // float from a string
+
+      getline(ss, hold, ',');
+      list.kdRatio = stof(hold);
+
+      getline(ss, list.scout_status, ',');
+
+      Players[*p_numPlayers] = list; // Stores all the player data onto the next
+                                     // free spot in the array
+      (*p_numPlayers)++;
+    }
+    inFile.close(); // Closes the file
+  }
 }
 
-// Removes the player at the given index from the roster and shifts remaining players.
-void deletePlayer(player team[], int& size, int index) {
-  if (index < 0 || index >= size) {
-    std::cout << "Invalid index.\n";
+void readingFixturesInputFiles(string filename, fixture Fixtures[],
+                               int *p_numFixtures)
+{
+  ifstream inFile(filename);
+
+  if (!inFile)
+  {
     return;
   }
-  for (int i = index; i < size - 1; i++) {
-    team[i] = team[i + 1];
+  else
+  {
+    string line;
+    getline(inFile, line);
+    *p_numFixtures = 0;
+
+    while (getline(inFile, line) && *p_numFixtures < MAX_FIXTURES)
+    {
+      stringstream ss(line);
+      string hold;
+      fixture list;
+
+      getline(ss, hold, ',');
+      list.fixture_id = stoi(hold);
+
+      getline(ss, list.opponent, ',');
+      getline(ss, list.matchdate, ',');
+
+      getline(ss, hold, ',');
+      list.match_stats.gameid = stoi(hold);
+
+      getline(ss, list.match_stats.game_name, ',');
+
+      Fixtures[*p_numFixtures] = list;
+      (*p_numFixtures)++;
+    }
+    inFile.close();
   }
-  size--;
 }
 
-// Prompts for a new rating and updates the given player by reference.
-void editPlayerRating(player& p) {
-  int newRating;
-  std::cout << "Enter new rating: ";
-  std::cin >> newRating;
-  updateRatingByRefVar(p, newRating);
+void writeToOutputFile(string filename, const player Players[],
+                       int numPlayers)
+{
+  ofstream outFile(filename);
+
+  if (!outFile)
+  {
+    cerr << "Error writing to file: " << filename << endl;
+    return;
+  }
+
+  outFile << "PlayerID,RealName,GamerTag,CurrentRole,Rating,WinRate,kdRatio,"
+             "ScoutStatus\n"; // header row
+
+  // Write one line per playlist, with commas inbetween the values
+  for (int i = 0; i < numPlayers; i++)
+  {
+    outFile << Players[i].playerid << "," << Players[i].real_name << ","
+            << Players[i].gamer_tag << "," << Players[i].current_role << ","
+            << Players[i].rating << "," << Players[i].winRate << ","
+            << Players[i].kdRatio << "," << Players[i].scout_status << "\n";
+  }
+  outFile.close();
+  cout << "\nAll Availiable Player data are written to: " << filename << endl;
 }
 
-// Prompts for a new rating and updates the given player via pointer.
-void editPlayerRatingByPointer(player* p) {
-  int newRating;
-  std::cout << "Enter new rating: ";
-  std::cin >> newRating;
-  updateRatingByPointer(p, newRating);
+void writingToFixturesOutputFile(string filename, const fixture Fixtures[],
+                                 int numFixtures)
+{
+  ofstream outFile(filename);
+
+  if (!outFile)
+  {
+    cerr << "Error writing to file: " << filename << endl;
+    return;
+  }
+
+  outFile << "FixtureID,Oppenent,MatchDate,gameid,gamename\n"; // header row
+
+  for (int i = 0; i < numFixtures; i++)
+  {
+    outFile << Fixtures[i].fixture_id << "," << Fixtures[i].opponent << ","
+            << Fixtures[i].matchdate << "\n";
+  }
+  outFile.close();
+  cout << "\nAll Availiable Fixture data are written to: " << filename << endl;
 }
 
-// Displays all players currently in the roster.
-void viewRoster(player team[], int size) {
-  passArrayOfPlayers(team, size);
+// Linear Search: Searches the every element of the array and checks if the ID
+// inputted by the user matches from the I/O files
+int searchForPlayerID(const player players[], int size, int playerID)
+{
+  for (int i = 0; i < size; i++)
+  { // Starts at index 0 of the array and starts
+    // looking at all the elements
+    if (players[i].playerid ==
+        playerID)
+    {           // Compares the players ID from the struct and the inputted
+                // ID the user is looking for
+      return i; // Stops the search when it finds the right match
+    }
+  }
+  return -1;
 }
 
-// Initializes sample roster data and runs the main interactive menu loop.
-void runApp() {
-  const int capacity = 10;
-  player team[capacity] = {
-      {"Alex Smith", "Blaze", "DPS", 2400, 62.5f, 1.8f, "Scouted"},
-      {"Jamie Lee", "Vortex", "Support", 2150, 58.0f, 1.2f, "Scouted"},
-      {"Sam Rivera", "Nightowl", "Tank", 2600, 71.0f, 2.1f, "Signed"}
-  };
-  int size = 3;
+void showMenu()
+{
+  // Displays the main menu options to the user
+  cout << "\n===== E-SPORTS SCOUTING MENU =====\n";
+  cout << "1. List players\n";
+  cout << "2. List fixtures\n";
+  cout << "3. Find the best by rating\n";
+  cout << "4. Sort by game\n";
+  cout << "5. Sort by fixture\n";
+  cout << "6. Shortlist\n";
+  cout << "7. Exit\n";
+  cout << "Enter your choice: ";
+}
+
+void listPlayers(const player Players[], int numPlayers)
+{
+  // Displays all players currently loaded in the Players array
+  if (numPlayers <= 0)
+  {
+    cout << "No players available.\n";
+    return;
+  }
+
+  for (int i = 0; i < numPlayers; i++)
+  {
+    cout << Players[i].playerid << " | " << Players[i].gamer_tag << " ("
+         << Players[i].real_name << ") | Role: " << Players[i].current_role
+         << " | Rating: " << Players[i].rating
+         << " | WinRate: " << Players[i].winRate
+         << " | K/D: " << Players[i].kdRatio
+         << " | Status: " << Players[i].scout_status << endl;
+  }
+}
+
+void listFixtures(const fixture Fixtures[], int numFixtures)
+{
+  // Displays all fixtures currently loaded in the Fixtures array
+  if (numFixtures <= 0)
+  {
+    cout << "No fixtures available.\n";
+    return;
+  }
+
+  for (int i = 0; i < numFixtures; i++)
+  {
+    cout << Fixtures[i].fixture_id << " | vs " << Fixtures[i].opponent
+         << " | Date: " << Fixtures[i].matchdate
+         << " | Game: " << Fixtures[i].match_stats.game_name
+         << " (ID: " << Fixtures[i].match_stats.gameid << ")" << endl;
+  }
+}
+
+void runMenu(player Players[], int numPlayers, fixture Fixtures[],
+             int numFixtures, game games[], int numGames)
+{
+  // Runs the main interactive menu loop and dispatches to project functions
   int choice = 0;
 
-  while (choice != 6) {
+  while (choice != 7)
+  {
     showMenu();
-    std::cin >> choice;
+    if (!(cin >> choice))
+    {
+      cin.clear();
+      cin.ignore(10000, '\n');
+      cout << "Invalid input. Please enter a number.\n";
+      continue;
+    }
 
-    switch (choice) {
+    switch (choice)
+    {
       case 1:
-        addPlayer(team, size, capacity);
+        // 1. List players
+        listPlayers(Players, numPlayers);
         break;
-      case 2: {
-        int index;
-        std::cout << "Enter index to delete: ";
-        std::cin >> index;
-        deletePlayer(team, size, index);
+
+      case 2:
+        // 2. List fixtures
+        listFixtures(Fixtures, numFixtures);
         break;
-      }
-      case 3: {
-        int index;
-        std::cout << "Enter index to edit: ";
-        std::cin >> index;
-        if (index >= 0 && index < size) {
-          editPlayerRating(team[index]);
-        } else {
-          std::cout << "Invalid index.\n";
+
+      case 3:
+        // 3. Find the best by rating (uses findBestPlayerIndex)
+        if (numPlayers > 0)
+        {
+          int bestIdx = findBestPlayerIndex(Players, numPlayers);
+          cout << "Best player: " << Players[bestIdx].gamer_tag
+               << " (" << Players[bestIdx].real_name << ") - Rating: "
+               << Players[bestIdx].rating << endl;
+        }
+        else
+        {
+          cout << "No players available.\n";
         }
         break;
-      }
+
       case 4:
-        viewRoster(team, size);
-        break;
-      case 5: {
-        if (size > 0) {
-          int best = findBestPlayerIndex(team, size);
-          std::cout << "Best player: " << team[best].gamer_tag
-                    << " (rating " << team[best].rating << ")\n";
-        } else {
-          std::cout << "No players in roster.\n";
+        // 4. Sort by game (uses sortById for game[])
+        if (numGames > 0)
+        {
+          sortById(games, numGames);
+          cout << "Games sorted by ID.\n";
+        }
+        else
+        {
+          cout << "No games available.\n";
         }
         break;
-      }
-      case 6:
-        std::cout << "Goodbye!\n";
+
+      case 5:
+        // 5. Sort by fixture (uses sortById for fixture[])
+        if (numFixtures > 0)
+        {
+          sortById(Fixtures, numFixtures);
+          cout << "Fixtures sorted by ID:\n";
+          listFixtures(Fixtures, numFixtures);
+        }
+        else
+        {
+          cout << "No fixtures available.\n";
+        }
         break;
+
+      case 6:
+        // 6. Shortlist (display only; implementation to be added later)
+        cout << "Shortlist feature is not implemented yet.\n";
+        break;
+
+      case 7:
+        cout << "Exiting menu.\n";
+        break;
+
       default:
-        std::cout << "Invalid choice.\n";
+        cout << "Invalid choice. Please select 1-7.\n";
         break;
     }
   }
